@@ -1,0 +1,4 @@
+ipython==2.2.0
+
+# On OS X
+# gnureadline==6.3.3
