@@ -39,3 +39,8 @@ cd /vagrant
 
 pip install -r requirements.txt
 pip install gunicorn
+
+sudo ln -s /vagrant/conf/nginx/radar /etc/nginx/sites-enabled/radar
+sudo cp /vagrant/conf/init/radar.conf /etc/init/radar.conf
+sudo cp /vagrant/conf/init/nginx.conf /etc/init/nginx.conf
+sudo cp /vagrant/conf/init/elasticsearch.conf /etc/init/elasticsearch.conf
