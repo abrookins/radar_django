@@ -20,6 +20,7 @@ sudo apt-get install python3.4-dev -y
 sudo apt-get install python3.4 -y
 sudo apt-get install g++ -y
 sudo apt-get install vim -y
+sudo apt-get install nginx -y
 
 # Install setuptools (easy_install, pip)
 wget https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py -O /tmp/ez_setup.py
@@ -37,4 +38,4 @@ easy_install pip
 cd /vagrant
 
 pip install -r requirements.txt
-
+pip install gunicorn
