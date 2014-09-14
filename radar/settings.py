@@ -40,6 +40,12 @@ INSTALLED_APPS = (
 
     'rest_framework',
     'rest_framework.authtoken',
+    'social.apps.django_app.default',
+
+    # Project apps
+    'api',
+    'accounts',
+    'radar',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -79,6 +85,30 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
+
+TEMPLATE_CONTEXT_PROCESSORS = (
+    'django.contrib.auth.context_processors.auth',
+    'django.core.context_processors.debug',
+    'django.core.context_processors.i18n',
+    'django.core.context_processors.media',
+    'django.core.context_processors.static',
+    'django.core.context_processors.tz',
+    'django.contrib.messages.context_processors.messages',
+    'social.apps.django_app.context_processors.backends',
+    'social.apps.django_app.context_processors.login_redirect',
+)
+
+
+LOGIN_REDIRECT_URL = '/'
+
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'social.backends.google.GoogleOAuth2',
+)
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '480791338787-r44ttmldon6o06nst7ppr62u7r7q6eu5.apps.googleusercontent.com'
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = 'pXRCtKHFBuTDRnAlwU222CaA'
 
 
 # Django rest framework

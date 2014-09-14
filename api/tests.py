@@ -1,4 +1,8 @@
+from django.contrib.auth import get_user_model
 from django.test import TestCase
+
+from rest_framework.authtoken.models import Token
+
 
 import pprint; pp = pprint.PrettyPrinter()
 
@@ -17,3 +21,12 @@ class TestCompareLocation(TestCase):
         print(resp.content)
         # pp.pprint(resp.data)
         self.assertTrue(False)
+
+
+class TestCreateAuthTokenSignal(TestCase):
+    def test_new_user_gets_token(self):
+        """A new Django User should receive an API auth token"""
+        User = get_user_model()
+        u = User.objects.create_user(username="test", email="test@example.com", password="secret")
+        expected = 1
+        self.assertEqual(expected, Token.objects.filter(user=u).count())
