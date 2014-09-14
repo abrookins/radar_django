@@ -1,5 +1,26 @@
 {% extends 'base.html' %}
+{% load staticfiles %}
 
 {% block main %}
-    <h1>Find crimes near you</h1>
+    <!-- Main component for a primary marketing message or call to action -->
+    <div class="jumbotron">
+        <h1>Are you in danger?</h1>
+
+        <p>We'll let you know how the crime rate at your current location compares to the rest of the city.</p>
+
+        <p>
+            <a class="btn btn-lg btn-primary" href="#compare-location" role="button">Compare crime at your location</a>
+        </p>
+    </div>
+
+    <div class="hidden">
+        <h1>Crime rate comparison</h1>
+        <p>Stuff</p>
+    </div>
 {% endblock %}
+
+
+{% block extra_js %}
+    <script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.20/angular.min.js"></script>
+{#    <script src="{% static 'js/script.js' %}"></script>#}
+{% endblock extra_js %}
