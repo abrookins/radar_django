@@ -21,11 +21,11 @@ DATA_DIR = os.path.join(BASE_DIR, 'data')
 SECRET_KEY = 'yvxn-d70up$o)sf^n1kbut#-jc9k@f*w)0mo7us)!&3stqgm*9'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 TEMPLATE_DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['0.0.0.0', '127.0.0.1', 'localhost', '192.168.50.4', 'radartest.com']
 
 
 # Application definition
@@ -127,5 +127,5 @@ REST_FRAMEWORK = {
 
 
 STATIC_URL = '/static/'
-
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')

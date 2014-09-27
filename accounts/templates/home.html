@@ -4,23 +4,26 @@
 {% block main %}
     <!-- Main component for a primary marketing message or call to action -->
     <div class="jumbotron">
-        <h1>Are you in danger?</h1>
+        <h1>Bad neighborhood?</h1>
 
         <p>We'll let you know how the crime rate at your current location compares to the rest of the city.</p>
 
         <p>
-            <a class="btn btn-lg btn-primary" href="#compare-location" role="button">Compare crime at your location</a>
+            <a class="btn btn-lg btn-primary" id="compare-location" href="#compare-location" role="button">Compare crime at your location</a>
         </p>
     </div>
 
-    <div class="hidden">
-        <h1>Crime rate comparison</h1>
-        <p>Stuff</p>
+    <div id="comparison" class="hidden">
+        <h1>Crime compared to city average</h1>
+        <div id="chart1">
+            <svg style='height:500px'></svg>
+        </div>
     </div>
 {% endblock %}
 
 
 {% block extra_js %}
-    <script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.20/angular.min.js"></script>
-{#    <script src="{% static 'js/script.js' %}"></script>#}
+    <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/nvd3/1.1.15-beta/nv.d3.min.js"></script>
+    <script src="{% static 'js/charts.js' %}"></script>
 {% endblock extra_js %}

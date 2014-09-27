@@ -8,6 +8,11 @@ from rest_framework import status
 from miner.tools import CrimeAverager, get_crimes_near_coordinate, get_crime_sums
 
 
+def percentage_difference(x, y):
+    """Calculate the percentage difference between ``x`` and ``y``."""
+    return (x - y / ((x + y) / 2)) * 100
+
+
 class CompareLocation(APIView):
     permission_classes = (IsAuthenticated,)
 
@@ -24,11 +29,14 @@ class CompareLocation(APIView):
         differences = {}
 
         # TODO: Average by hour and by day, since we have that data too.
-        for crime_type, type_average in averager.averages.items():
+        for crime_type, city_average in averager.averages.items():
             if crime_type in sums_by_type:
-                differences[crime_type] = ((sums_by_type[crime_type] - type_average) / type_average) * 100
+                type_sum_for_this_location = sums_by_type[crime_type]
             else:
-                differences[crime_type] = None
+                type_sum_for_this_location = 0
+
+            difference = percentage_difference(city_average, type_sum_for_this_location)
+            differences[crime_type] = difference
 
         return Response(differences, status=status.HTTP_200_OK)
 

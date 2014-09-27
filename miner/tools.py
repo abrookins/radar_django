@@ -19,6 +19,7 @@ Returns:
     }
  """
 import os
+import statistics
 
 import dateutil.parser
 import geohash
@@ -179,8 +180,7 @@ class CrimeAverager:
                 }
             }
         )
-        hashes = (bucket['key'] for bucket in
-                  res['aggregations']['grid']['buckets'])
+        hashes = (bucket['key'] for bucket in res['aggregations']['grid']['buckets'])
         return (geohash.bbox(h) for h in hashes)
 
     def summarize_cells(self, cells):
@@ -197,9 +197,8 @@ class CrimeAverager:
     def get_cell_summaries(self):
         """Returns summaries of all crime activity.
 
-        If the summaries file doesn't exist, calculates summary data for all
-        crimes in the ES store and pickles a dict containing this data to
-        self.summaries_path.
+        If the summaries file doesn't exist, calculates summary data for all crimes in the ES
+        store and pickles a dict containing this data to self.summaries_path.
         """
         try:
             cell_summaries = load_pickled_file(self.summaries_path)
@@ -210,22 +209,22 @@ class CrimeAverager:
         return cell_summaries
 
     def calculate_averages_for_cells(self):
+        """Calculate the median average for all geohash cells that we know about."""
         cell_summaries = self.get_cell_summaries()
-        num_summaries = len(cell_summaries)
-        totals_by_type = {}
+        sums_by_type = {}
         averages = {}
 
         for summary in cell_summaries:
             by_type = summary['by_type']
 
-            for crime_type, cell_total in by_type.items():
-                if crime_type in totals_by_type:
-                    totals_by_type[crime_type] += cell_total
+            for crime_type, cell_sum in by_type.items():
+                if crime_type in sums_by_type:
+                    sums_by_type[crime_type].append(cell_sum)
                 else:
-                    totals_by_type[crime_type] = cell_total
+                    sums_by_type[crime_type] = [cell_sum]
 
-        for crime_type, total in totals_by_type.items():
-            averages[crime_type] = total / num_summaries
+        for crime_type, crime_sums in sums_by_type.items():
+            averages[crime_type] = statistics.median(crime_sums)
 
         with open(self.averages_path, 'wb') as f:
             pickle.dump(averages, f)
@@ -234,13 +233,11 @@ class CrimeAverager:
 
     @property
     def averages(self):
-        """Return a dict containing average crimes per geohash cell.
+        """Return a dict containing data on crime averages per geohash cell.
 
-        Attempts to load the data from ``path``. If that file does not exist,
-        the
-        data will be calculated for year ``year`` at precision ``precision``,
-        which is the size in ElasticSearch of the geohash cell to use for
-        averages.
+        Attempts to load the data from ``path``. If that file does not exist, the data will be
+        calculated for year ``year`` at precision ``precision``, which is the size in
+        ElasticSearch of the geohash cell to use for averages.
         """
         if self._averages:
             return self._averages
