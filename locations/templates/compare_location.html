@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+
+{% block main %}
+  <div id="comparison">
+    <h1>Crime compared to city average</h1>
+    <div id="chart1">
+      <svg style='height:500px'></svg>
+    </div>
+  </div>
+{% endblock %}
+
+
+{% block extra_js %}
+{#  <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.min.js"></script>#}
+{#  <script src="//cdnjs.cloudflare.com/ajax/libs/nvd3/1.1.15-beta/nv.d3.min.js"></script>#}
+
+  <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+
+  <script type="text/javascript">
+    window.coords = {
+      longitude: {{ longitude }},
+      latitude: {{ latitude }}
+    };
+  </script>
+
+  <script src="{% static 'js/charts.js' %}"></script>
+{% endblock extra_js %}

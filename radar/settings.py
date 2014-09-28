@@ -21,7 +21,7 @@ DATA_DIR = os.path.join(BASE_DIR, 'data')
 SECRET_KEY = 'yvxn-d70up$o)sf^n1kbut#-jc9k@f*w)0mo7us)!&3stqgm*9'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 TEMPLATE_DEBUG = True
 
@@ -44,7 +44,7 @@ INSTALLED_APPS = (
 
     # Project apps
     'api',
-    'accounts',
+    'locations',
     'radar',
 )
 

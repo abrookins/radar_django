@@ -1,30 +1,12 @@
 """
-Summarize crimes in the database and cache the values on disk.
-
-Example usage:
-
-    averager = CrimeAverager(summaries_path='/tmp/crime_data',
-                             averages_path='/tmp/averages',
-                             precision=6,
-                             year=2013)
-
-Returns:
-
-    {
-    'Aggravated Assault': 1.470326409495549,
-     'Arson': 0.04896142433234421,
-     'Assault, Simple': 2.701780415430267,
-      ...
-     'Weapons': 0.42729970326409494
-    }
- """
+Utilities to help generate statistics from crime data.
+"""
 import os
 import statistics
 
 import dateutil.parser
 import geohash
 import pickle
-
 from elasticsearch import Elasticsearch
 
 
@@ -154,47 +136,89 @@ def get_crime_sums(crimes):
     return summary
 
 
-class CrimeAverager:
-    def __init__(self, data_root, precision=6, year=2013):
-        filename_postfix = '{}_{}'.format(precision, year)
-        averages_path = os.path.join(data_root, 'crime_averages_{}'.format(filename_postfix))
-        summaries_path = os.path.join(data_root, 'crime_summaries_{}'.format(filename_postfix))
-        self.precision = precision
-        self.averages_path = averages_path
-        self.summaries_path = summaries_path
-        self.year = year
-        self._averages = None
+def sum_crimes_in_cells(cells, year):
+    """Calculate sums of crime data for each geohash bounding box in ``cells`` during year ``year``."""
+    cell_summaries = []
 
-    def get_cells(self):
-        """Get a mesh of geohash cells for all crimes in ElasticSearch."""
-        res = es.search(
-            index='crimes',
-            body={
-                'aggregations': {
-                    'grid': {
-                        'geohash_grid': {
-                            'field': 'geometry.coordinates',
-                            'precision': self.precision
-                        }
+    for cell in cells:
+        crimes = get_crimes_within_cell(cell, year=year)
+        summary = get_crime_sums(crimes)
+        cell_summaries.append(summary)
+
+    return cell_summaries
+
+
+def get_cells(precision):
+    """Get a mesh of geohash cells for all crimes in ElasticSearch at precision ``precision``."""
+    res = es.search(
+        index='crimes',
+        body={
+            'aggregations': {
+                'grid': {
+                    'geohash_grid': {
+                        'field': 'geometry.coordinates',
+                        'precision': precision
                     }
                 }
             }
-        )
-        hashes = (bucket['key'] for bucket in res['aggregations']['grid']['buckets'])
-        return (geohash.bbox(h) for h in hashes)
+        }
+    )
+    hashes = (bucket['key'] for bucket in res['aggregations']['grid']['buckets'])
+    return (geohash.bbox(h) for h in hashes)
 
-    def summarize_cells(self, cells):
-        """Calculate sums of crime data for each geohash bounding box in ``cells``."""
-        cell_summaries = []
 
-        for cell in cells:
-            crimes = get_crimes_within_cell(cell, year=self.year)
-            summary = get_crime_sums(crimes)
-            cell_summaries.append(summary)
+def get_cell_sums(precision, year):
+    """Get sums of crimes committed for all known geohash cells."""
+    cells = get_cells(precision)
+    return sum_crimes_in_cells(cells, year)
 
-        return cell_summaries
 
-    def get_cell_summaries(self):
+def calculate_averages_for_cells(cell_sums):
+    """Calculate the median average for all geohash cells that we know about."""
+    sums_by_type = {}
+    averages = {}
+
+    for sums in cell_sums:
+        by_type = sums['by_type']
+
+        for crime_type, crime_type_sum in by_type.items():
+            if crime_type in sums_by_type:
+                sums_by_type[crime_type].append(crime_type_sum)
+            else:
+                sums_by_type[crime_type] = [crime_type_sum]
+
+    for crime_type, crime_sums in sums_by_type.items():
+        averages[crime_type] = statistics.median(crime_sums)
+
+    return averages
+
+
+def percentage_difference(x, y):
+    """Calculate the percentage difference between ``x`` and ``y``."""
+    difference = (x - y / ((x + y) / 2)) * 100
+    if x > y:
+        difference = -difference
+    return difference
+
+
+class CachingCrimeAverager(object):
+    def __init__(self, root_dir, year, precision, averages_path=None, summaries_path=None):
+        self.root_dir = root_dir
+        self.year = year
+        self.precision = precision
+        self._averages = None
+
+        filename_postfix = '{}_{}'.format(precision, year)
+
+        if not averages_path:
+            averages_path = os.path.join(root_dir, 'crime_averages_{}'.format(filename_postfix))
+        self.averages_path = averages_path
+
+        if not summaries_path:
+            summaries_path = os.path.join(self.root_dir, 'crime_summaries_{}'.format(filename_postfix))
+        self.summaries_path = summaries_path
+
+    def get_cell_sums(self):
         """Returns summaries of all crime activity.
 
         If the summaries file doesn't exist, calculates summary data for all crimes in the ES
@@ -203,33 +227,10 @@ class CrimeAverager:
         try:
             cell_summaries = load_pickled_file(self.summaries_path)
         except OSError:
-            cells = self.get_cells()
-            cell_summaries = self.summarize_cells(cells)
+            cells = get_cells(self.precision)
+            cell_summaries = sum_crimes_in_cells(cells, self.year)
             write_pickled_file(cell_summaries, self.summaries_path)
         return cell_summaries
-
-    def calculate_averages_for_cells(self):
-        """Calculate the median average for all geohash cells that we know about."""
-        cell_summaries = self.get_cell_summaries()
-        sums_by_type = {}
-        averages = {}
-
-        for summary in cell_summaries:
-            by_type = summary['by_type']
-
-            for crime_type, cell_sum in by_type.items():
-                if crime_type in sums_by_type:
-                    sums_by_type[crime_type].append(cell_sum)
-                else:
-                    sums_by_type[crime_type] = [cell_sum]
-
-        for crime_type, crime_sums in sums_by_type.items():
-            averages[crime_type] = statistics.median(crime_sums)
-
-        with open(self.averages_path, 'wb') as f:
-            pickle.dump(averages, f)
-
-        return averages
 
     @property
     def averages(self):
@@ -244,6 +245,7 @@ class CrimeAverager:
         try:
             averages = load_pickled_file(self.averages_path)
         except OSError:
-            averages = self.calculate_averages_for_cells()
+            cell_sums = self.get_cell_sums()
+            averages = calculate_averages_for_cells(cell_sums)
         self._averages = averages
         return averages
