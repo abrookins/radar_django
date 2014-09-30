@@ -3,20 +3,15 @@
 
 {% block main %}
   <div id="comparison">
-    <h1>Crime compared to city average</h1>
-    <div id="chart1">
-      <svg style='height:500px'></svg>
-    </div>
+    <h1>Crime compared to city averages</h1>
+    <h2>Location: {{ longitude }}, {{ latitude }}</h2>
+    <div id="charts"></div>
   </div>
 {% endblock %}
 
 
 {% block extra_js %}
-{#  <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.min.js"></script>#}
-{#  <script src="//cdnjs.cloudflare.com/ajax/libs/nvd3/1.1.15-beta/nv.d3.min.js"></script>#}
-
   <script type="text/javascript" src="https://www.google.com/jsapi"></script>
-
   <script type="text/javascript">
     window.coords = {
       longitude: {{ longitude }},

@@ -174,7 +174,7 @@ def get_cell_sums(precision, year):
 
 
 def calculate_averages_for_cells(cell_sums):
-    """Calculate the median average for all geohash cells that we know about."""
+    """Calculate the median average of crimes by type for all geohash cells that we know about."""
     sums_by_type = {}
     averages = {}
 

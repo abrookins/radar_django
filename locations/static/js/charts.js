@@ -1,58 +1,64 @@
 (function() {
-  function createCrimeChart(data) {
 
-    google.load("visualization", "1", {
-      packages: ["corechart"],
-      callback: drawChart
-    });
+  function createDataTables(locationCrimeSums, cityAverages, crimeTypes) {
+    var header = ['Crime type', 'Your location', 'City average'],
+        data = {},
+        crimeType,
+        locationSum,
+        i,
+        cityAverage;
 
-    function drawChart () {
-      var dataTable,
-          options = {
-            height: 800,
-            chartArea: {top: 40},
-            hAxis: {format: '#\'%\''}
-          };
+    crimeTypes.sort();
 
-      var chart = new google.visualization.BarChart(document.getElementById('chart1'));
-
-      dataTable = google.visualization.arrayToDataTable(data);
-      chart.draw(dataTable, options);
+    for (i = 0; i < crimeTypes.length; i++) {
+      crimeType = crimeTypes[i];
+      locationSum = parseFloat(locationCrimeSums[crimeType] || 0);
+      cityAverage = parseFloat(cityAverages[crimeType]);
+      data[crimeType] = [header];
+      data[crimeType].push([crimeType, locationSum, cityAverage]);
     }
 
+    return data;
+  }
+
+  function createCrimeChart (data, elementId) {
+    var dataTable,
+        chart,
+        options = {
+          chartArea: {top: 40, bottom: 40},
+          vAxis: {titleTextStyle: {color: 'red'}}
+        };
+
+    dataTable = google.visualization.arrayToDataTable(data);
+    chart = new google.visualization.BarChart(document.getElementById(elementId));
+    chart.draw(dataTable, options);
   }
 
   function getData(coords) {
-    var url = '/api/v1.0/crimes/compare_location/' + coords.longitude + '/' + coords.latitude;
-    $.get(url).then(function(averages) {
-      var sorted = [],
-          data = [
-              ['Crime type', 'Percentage difference']
-          ],
-          crimeType,
-          item,
-          floatValue,
-          i;
+    var url = '/api/v1.0/crimes/compare/' + coords.longitude + '/' + coords.latitude + '/to/city-average/',
+        chartContainer = $('#charts'),
+        crimeType,
+        crimeTypeDiv,
+        crimes,
+        id,
+        data;
 
-      for (crimeType in averages) {
-        if (averages.hasOwnProperty(crimeType)) {
-          sorted.push([crimeType, averages[crimeType]]);
+    $.get(url).then(function(response) {
+      data = createDataTables(response.location_sums.by_type, response.city_averages, response.crime_types);
+
+
+      for (crimeType in data) {
+        if (data.hasOwnProperty(crimeType)) {
+          id = crimeType.toLowerCase().replace(' ', '-');
+          crimeTypeDiv = $("<div>")
+              .height('200px')
+              .width('900px')
+              .attr('id', id);
+          chartContainer.append(crimeTypeDiv);
+          crimes = data[crimeType];
+          createCrimeChart(crimes, id);
         }
       }
-
-      sorted.sort();
-
-      for (i = 0; i < sorted.length; i++) {
-        item = sorted[i];
-        floatValue = parseInt(item[1]);
-        if (isNaN(floatValue)) {
-          continue;
-        }
-        data.push([item[0], floatValue])
-      }
-
-      createCrimeChart(data);
-
     }).fail(function(response) {
       alert("Could not connect to site. Try again later.");
       console.log(response);
@@ -60,6 +66,11 @@
   }
 
   $(document).ready(function() {
-    getData(window.coords);
+    google.load("visualization", "1", {
+      packages: ["corechart"],
+      callback: function () {
+        getData(window.coords);
+      }
+    });
   });
 })();

@@ -2,26 +2,25 @@
 {% load staticfiles %}
 
 {% block main %}
-    <!-- Main component for a primary marketing message or call to action -->
-    <div class="jumbotron">
-        <h1>Bad neighborhood?</h1>
+  <!-- Main component for a primary marketing message or call to action -->
+  <div class="jumbotron">
+    <h1>Portland crime stats</h1>
 
-        <p>We'll let you know how the crime rate at your current location compares to the rest of the city.</p>
+    <p>See how your current location compares to average crime in the city, or compare two locations
+      to each other.</p>
 
-        <p>
-            <a class="btn btn-lg btn-primary" id="compare-location" href="#compare-location" role="button">Compare crime at your location</a>
-        </p>
-    </div>
-
-    <div id="comparison" class="hidden">
-        <h1>Crime compared to city average</h1>
-        <div id="chart1">
-            <svg style='height:500px'></svg>
-        </div>
-    </div>
+    <p>
+      <a class="btn btn-lg btn-primary" id="compare-location" href="#compare-location" role="button">
+        Compare your location to the rest of the city
+      </a>
+      <a class="btn btn-lg btn-primary" id="compare-two-locations" href="#compare-two-locations" role="button">
+        Compare two locations
+      </a>
+    </p>
+  </div>
 {% endblock %}
 
 
 {% block extra_js %}
-    <script src="{% static 'js/home.js' %}"></script>
+  <script src="{% static 'js/home.js' %}"></script>
 {% endblock extra_js %}
