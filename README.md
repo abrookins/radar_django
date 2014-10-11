@@ -10,7 +10,7 @@ Make sure ElasticSearch is running:
 Then set up the index and data:
 
     $ cd /vagrant
-    $ cd radar
+    $ cd crime_stats
     $ python create_index.py
     $ python load_crimes.py ../data/crimes_2013.json
     
@@ -23,15 +23,17 @@ Next, set up the Django database:
 And get your static files collected:
 
     $ ./manage.py collectstatic
-    
-Copy the nginx config to /etc/nginx/sites-enabled/radar:
-   
-Copy the gunicorn upstart job to /etc/init/radar.conf:
- 
-Copy the nginx upstart job to /etc/init/radar:
- 
-Copy the elasticsearch upstart job to /etc/init/elasticsearch.conf:
+
+
+## If you want to mirror "production"
+- Copy the nginx config to /etc/nginx/sites-enabled/radar
+- Copy the gunicorn upstart job to /etc/init/radar.conf
+- Copy the nginx upstart job to /etc/init/radar
+- Copy the elasticsearch upstart job to /etc/init/elasticsearch.conf
  
 ## Running
 
-If you installed the upstart jobs right, just log in! bwahaha
+If you are using the Upstart jobs, log in and start the services with `sudo
+start`.
+
+Otherwise log in and run the development server.

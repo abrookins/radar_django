@@ -1,14 +1,29 @@
 from elasticsearch import Elasticsearch
 
-es = Elasticsearch()
+
+DEFAULT_INDEX_NAME = 'crimes'
+DEFAULT_TYPE = 'crime'
 
 
-def create_index():
-    res = es.indices.create(
-        index='crimes',
+def delete_index(es=None, index_name=DEFAULT_INDEX_NAME):
+    """Delete an index using the Elasticsearch instance ``es``."""
+    if not es:
+        es = Elasticsearch()
+
+    return es.indices.delete(index_name)
+
+
+def create_index(es=None, index_name=DEFAULT_INDEX_NAME,
+                 type_name=DEFAULT_TYPE):
+    """Create the 'crimes' index using an Elasticsearch instance ``es``."""
+    if not es:
+        es = Elasticsearch()
+
+    return es.indices.create(
+        index=index_name,
         body={
             'mappings': {
-                'crime': {
+                type_name: {
                     'properties': {
                         'geometry': {
                             'properties': {
@@ -49,7 +64,7 @@ def create_index():
         }
     )
 
-    print(res)
 
 if __name__ == '__main__':
-    create_index()
+    result = create_index()
+    print(result)

@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from crime_stats import util
+from crime_stats import crimes, crime_averager
 
 
 class CompareLocation(APIView):
@@ -17,11 +17,11 @@ class CompareLocation(APIView):
         year = request.GET.get('year', 2013)
         precision = request.GET.get('precision', 6)
 
-        crimes = util.get_crimes_near_coordinate(lon, lat, precision=precision, year=year)
-        crime_sums = util.get_crime_sums(crimes)
+        crimes = crimes.get_crimes_near_coordinate(lon, lat, precision=precision, year=year)
+        crime_sums = crimes.get_crime_sums(crimes)
 
         # TODO: Average by hour and by day, since we have that data too.
-        averager = util.CachingCrimeAverager(root_dir=settings.DATA_DIR, precision=precision, year=year)
+        averager = crime_averager.CachingCrimeAverager(root_dir=settings.DATA_DIR, precision=precision, year=year)
         data = {
             'city_averages': averager.averages,
             'location_sums': crime_sums,
@@ -40,8 +40,8 @@ class CrimesNearLocation(APIView):
         year = request.GET.get('year', 2013)
         precision = request.GET.get('precision', 6)
 
-        crimes = util.get_crimes_near_coordinate(lon, lat, precision=precision, year=year)
-        crime_sums = util.get_crime_sums(crimes)
+        crimes = crimes.get_crimes_near_coordinate(lon, lat, precision=precision, year=year)
+        crime_sums = crimes.get_crime_sums(crimes)
 
         return Response(crime_sums, status=status.HTTP_200_OK)
 
@@ -52,7 +52,7 @@ class CityAverages(APIView):
     def get(self, request, *args, **kwargs):
         year = request.GET.get('year', 2013)
         precision = request.GET.get('precision', 6)
-        averager = util.CachingCrimeAverager(root_dir=settings.DATA_DIR, precision=precision, year=year)
+        averager = crimes.CachingCrimeAverager(root_dir=settings.DATA_DIR, precision=precision, year=year)
 
         return Response(averager.averages, status=status.HTTP_200_OK)
 

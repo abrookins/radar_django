@@ -26,7 +26,8 @@
         chart,
         options = {
           chartArea: {top: 40, bottom: 40},
-          vAxis: {titleTextStyle: {color: 'red'}}
+          vAxis: {titleTextStyle: {color: 'red'}},
+          hAxis: {title: "Crimes per year", titleTextStyle: {color: 'black'}}
         };
 
     dataTable = google.visualization.arrayToDataTable(data);
