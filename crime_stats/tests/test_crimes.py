@@ -6,13 +6,14 @@ from django.conf import settings
 from django.test import TestCase
 from elasticsearch import Elasticsearch, NotFoundError
 
-from crime_stats import index, load_crimes, crimes
+from crime_stats import index, load_crimes, models
 
 
 TEST_INDEX = 'crimes_test'
 
 
-class TestCrimes(TestCase):
+class BaseCrimeTestCase(TestCase):
+    """A base class for testing crimes that loads a test index with 2013 crime data"""
     @classmethod
     def setUpClass(cls):
         cls.elasticsearch = Elasticsearch()
@@ -32,8 +33,11 @@ class TestCrimes(TestCase):
     def tearDownClass(cls):
         index.delete_index(cls.elasticsearch, TEST_INDEX)
 
+
+class TestCrimes(BaseCrimeTestCase):
     def setUp(self):
-        self.crimes = crimes.Crimes(self.elasticsearch, precision=6)
+        self.crimes = models.Crimes(self.elasticsearch, precision=6,
+                                    index=TEST_INDEX)
 
     def test_get_cell_within_portland(self):
         """The Crimes wrapper should find a bounding box for a coordinate within Portland"""
@@ -75,14 +79,6 @@ class TestCrimes(TestCase):
             expected = 1.2  # km
             self.assertLessEqual(distance, expected)
 
-    def test_get_crimes_outside_portland(self):
-        """The Crimes wrapper should not find crimes for a coordinate outside of Portland"""
-        far_away = (-122.674417, 48.523813)
-        cell = self.crimes.get_cell(*far_away)
-        found_crimes = list(self.crimes.get_crimes_within_cell(cell, self.data_year))
-        expected = 0
-        self.assertEqual(expected, len(found_crimes))
-
     def test_get_crimes_near_coordinate(self):
         """The Crimes wrapper should find crimes near a coordinate within Portland
 
@@ -112,10 +108,10 @@ class TestCrimes(TestCase):
         self.assertEqual(expected, len(cells))
 
         for cell in cells:
-            self.assertLessEqual(cell['n'], crimes.PORTLAND['n'])
-            self.assertGreaterEqual(cell['s'], crimes.PORTLAND['s'])
-            self.assertLessEqual(cell['e'], crimes.PORTLAND['e'])
-            self.assertGreaterEqual(cell['w'], crimes.PORTLAND['w'])
+            self.assertLessEqual(cell['n'], models.PORTLAND['n'])
+            self.assertGreaterEqual(cell['s'], models.PORTLAND['s'])
+            self.assertLessEqual(cell['e'], models.PORTLAND['e'])
+            self.assertGreaterEqual(cell['w'], models.PORTLAND['w'])
 
     def test_get_cell_sums(self):
         """The Crimes wrapper should return a sum of crimes broken down by cell"""

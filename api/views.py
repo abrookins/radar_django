@@ -5,7 +5,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from crime_stats import crimes, crime_averager
+from elasticsearch import Elasticsearch
+
+from crime_stats import models, crime_averager, util
 
 
 class CompareLocation(APIView):
@@ -17,11 +19,18 @@ class CompareLocation(APIView):
         year = request.GET.get('year', 2013)
         precision = request.GET.get('precision', 6)
 
-        crimes = crimes.get_crimes_near_coordinate(lon, lat, precision=precision, year=year)
-        crime_sums = crimes.get_crime_sums(crimes)
+        es = Elasticsearch()
+
+        crimes = models.Crimes(es, index=settings.CRIME_INDEX,
+                               precision=precision)
+
+        found_crimes = crimes.get_crimes_near_coordinate(lon, lat, year=year)
+        crime_sums = util.get_crime_sums(found_crimes)
 
         # TODO: Average by hour and by day, since we have that data too.
-        averager = crime_averager.CachingCrimeAverager(root_dir=settings.DATA_DIR, precision=precision, year=year)
+        averager = crime_averager.CachingCrimeAverager(crimes=crimes,
+                                                       root_dir=settings.DATA_DIR,
+                                                       year=year)
         data = {
             'city_averages': averager.averages,
             'location_sums': crime_sums,
@@ -52,7 +61,7 @@ class CityAverages(APIView):
     def get(self, request, *args, **kwargs):
         year = request.GET.get('year', 2013)
         precision = request.GET.get('precision', 6)
-        averager = crimes.CachingCrimeAverager(root_dir=settings.DATA_DIR, precision=precision, year=year)
+        averager = models.CachingCrimeAverager(root_dir=settings.DATA_DIR, precision=precision, year=year)
 
         return Response(averager.averages, status=status.HTTP_200_OK)
 

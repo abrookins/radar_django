@@ -24,17 +24,18 @@ def is_within_portland(bbox):
 
 class Crimes(object):
     """Wrapper around an Elasticsearch instance that stores crime data."""
-    def __init__(self, es, precision=6):
+    def __init__(self, es, index="crimes", precision=6):
         """
         ``es``: an Elasticsearch instance
         """
         self.es = es
+        self.index = index
         self.precision = precision
 
     def get_cell(self, lon, lat):
         """Get the cell that a coordinate pair (lat, lon) falls within."""
         res = self.es.search(
-            index='crimes',
+            index=self.index,
             body={
                 "query": {
                     "filtered": {
@@ -70,7 +71,7 @@ class Crimes(object):
     def get_crimes_within_cell(self, cell, year):
         """Return all crimes that occurred within the geohash ``cell``."""
         res = self.es.search(
-            index='crimes',
+            index=self.index,
             body={
                 "from": 0,
                 "size": 5000,
@@ -123,7 +124,7 @@ class Crimes(object):
         chosen precision.
         """
         res = self.es.search(
-            index='crimes',
+            index=self.index,
             body={
                 'aggregations': {
                     'grid': {
