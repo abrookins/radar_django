@@ -6,6 +6,22 @@ import geohash
 from . import util
 
 
+# A rough city boundary -- inaccurate but good enough for our purposes
+# http://www.maptechnica.com/us-city-boundary-map/city/Portland/state/OR/cityid/4159000
+PORTLAND = {
+    'n': 45.65327200000000,
+    'w': -122.83675000000000,
+    's': 45.43239300000000,
+    'e': -122.47202100000000,
+}
+
+
+def is_within_portland(bbox):
+    """Return True if the bounding box ``member`` is roughly within Portland."""
+    return bbox['n'] <= PORTLAND['n'] and bbox['s'] >= PORTLAND['s'] \
+        and bbox['e'] <= PORTLAND['e'] and bbox['w'] >= PORTLAND['w']
+
+
 class Crimes(object):
     """Wrapper around an Elasticsearch instance that stores crime data."""
     def __init__(self, es, precision=6):
@@ -40,8 +56,15 @@ class Crimes(object):
                 }
             }
         )
-        cell_hash = res['aggregations']['grid']['buckets'][0]['key']
-        cell = geohash.bbox(cell_hash)
+
+        buckets = res['aggregations']['grid']['buckets']
+
+        if buckets:
+            cell_hash = buckets[0]['key']
+            cell = geohash.bbox(cell_hash)
+        else:
+            cell = None
+
         return cell
 
     def get_crimes_within_cell(self, cell, year):
@@ -50,7 +73,7 @@ class Crimes(object):
             index='crimes',
             body={
                 "from": 0,
-                "size": 1000,
+                "size": 5000,
                 "query": {
                     "filtered": {
                         "query": {
@@ -112,8 +135,12 @@ class Crimes(object):
                 }
             }
         )
+
         hashes = (bucket['key'] for bucket in res['aggregations']['grid']['buckets'])
-        return (geohash.bbox(h) for h in hashes)
+        all_cells = (geohash.bbox(h) for h in hashes)
+
+        # Discard cells that aren't roughly within Portland
+        return (cell for cell in all_cells if is_within_portland(cell))
 
     def sum_crimes_in_cells(self, cells, year):
         """Calculate sums of crime data for each geohash bounding box in ``cells``
