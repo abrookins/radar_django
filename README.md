@@ -2,13 +2,18 @@
 
 ## Installing
 
-First setup the ElasticSearch index and load data:
+First, set up the Vagrant instance:
 
-Make sure ElasticSearch is running:
+    $ vagrant up
+
+Then, log in and make sure ElasticSearch is running:
+
+    $ vagrant ssh
     $ sudo service elasticsearch start
     
-Then set up the index and data:
+Set up the index and data (still assuming you're in the Vagrant machine):
 
+    $ source ~/radar/bin/activate
     $ cd /vagrant
     $ cd crime_stats
     $ python create_index.py
@@ -25,15 +30,14 @@ And get your static files collected:
     $ ./manage.py collectstatic
 
 
-## If you want to mirror "production"
-- Copy the nginx config to /etc/nginx/sites-enabled/radar
-- Copy the gunicorn upstart job to /etc/init/radar.conf
-- Copy the nginx upstart job to /etc/init/radar
-- Copy the elasticsearch upstart job to /etc/init/elasticsearch.conf
- 
 ## Running
 
-If you are using the Upstart jobs, log in and start the services with `sudo
-start`.
+Log into the Vagrant machine in and run the development server.
 
-Otherwise log in and run the development server.
+    $ vagrant ssh
+    $ source ~/radar/bin/activate
+    $ cd /vagrant
+    $ ./manage.py runserver 0.0.0.0:8000
+
+The Vagrant file sets a static IP for the machine, so browse to
+http://192.168.50.4:8000/ to see the site.
