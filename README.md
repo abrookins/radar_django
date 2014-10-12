@@ -7,9 +7,9 @@ This version uses ElasticSearch, geohash grids and median averages to compare
 crime at the user's location to average crime across the city.
 
 The comparison is done by aggregating city crime data by geohash cell, summing
-by crime type for each cell (a bounding box), and then later finding the cell
-the user's location is in and comparing crime sums in that cell to the city
-averages.
+by crime type for each cell (a bounding box), finding the median values for all
+crime types across cells, and then later finding the cell the user's location
+is in and comparing crime sums in that cell to the city averages.
 
 ## Installing
 
