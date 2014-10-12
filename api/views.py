@@ -18,9 +18,7 @@ class CompareLocation(APIView):
         lon = float(kwargs['lon'])
         year = request.GET.get('year', 2013)
         precision = request.GET.get('precision', 6)
-
         es = Elasticsearch()
-
         crimes = models.Crimes(es, index=settings.CRIME_INDEX,
                                precision=precision)
 
@@ -34,7 +32,7 @@ class CompareLocation(APIView):
         data = {
             'city_averages': averager.averages,
             'location_sums': crime_sums,
-            'crime_types': averager.averages.keys()
+            'crime_types': sorted(averager.averages.keys())
         }
 
         return Response(data, status=status.HTTP_200_OK)
@@ -49,8 +47,13 @@ class CrimesNearLocation(APIView):
         year = request.GET.get('year', 2013)
         precision = request.GET.get('precision', 6)
 
-        crimes = crimes.get_crimes_near_coordinate(lon, lat, precision=precision, year=year)
-        crime_sums = crimes.get_crime_sums(crimes)
+        es = Elasticsearch()
+
+        crimes = models.Crimes(es, index=settings.CRIME_INDEX,
+                               precision=precision)
+
+        crimes = crimes.get_crimes_near_coordinate(lon, lat, year=year)
+        crime_sums = util.get_crime_sums(crimes)
 
         return Response(crime_sums, status=status.HTTP_200_OK)
 
@@ -61,7 +64,13 @@ class CityAverages(APIView):
     def get(self, request, *args, **kwargs):
         year = request.GET.get('year', 2013)
         precision = request.GET.get('precision', 6)
-        averager = models.CachingCrimeAverager(root_dir=settings.DATA_DIR, precision=precision, year=year)
+        es = Elasticsearch()
+        crimes = models.Crimes(es, index=settings.CRIME_INDEX,
+                               precision=precision)
+
+        averager = crime_averager.CachingCrimeAverager(crimes=crimes,
+                                                       root_dir=settings.DATA_DIR,
+                                                       year=year)
 
         return Response(averager.averages, status=status.HTTP_200_OK)
 

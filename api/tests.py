@@ -81,6 +81,48 @@ class TestCompareLocation(BaseCrimeTestCase):
 
         self.assertEqual(expected_sums, data['location_sums']['by_type'])
 
+    def test_returns_all_crime_types(self):
+        """The compare location API should return all known crime types"""
+        self.client.login(username="test", password="secret")
+        lon = -122.64788229999999
+        lat = 45.476296999999995
+        url = '/api/v1.0/crimes/compare/{}/{}/to/city-average/'.format(lon, lat)
+        resp = self.client.get(url)
+        data = json.loads(resp.content.decode())
+
+        expected_crime_types = [
+            'Liquor Laws',
+            'Trespass',
+            'Runaway',
+            'Burglary',
+            'Homicide',
+            'Assault, Simple',
+            'Fraud',
+            'Arson',
+            'Motor Vehicle Theft',
+            'Curfew',
+            'Sex Offenses',
+            'Offenses Against Family',
+            'Stolen Property',
+            'Weapons',
+            'Gambling',
+            'Larceny',
+            'Embezzlement',
+            'Kidnap',
+            'DUII',
+            'Drugs',
+            'Forgery',
+            'Disorderly Conduct',
+            'Vandalism',
+            'Rape',
+            'Aggravated Assault',
+            'Robbery',
+            'Prostitution'
+        ]
+
+        self.assertEqual(sorted(expected_crime_types),
+                         sorted(data['crime_types']))
+
 
 class TestCreateAuthTokenSignal(TestCase):
     def test_new_user_gets_token(self):
