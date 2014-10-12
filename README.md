@@ -1,5 +1,16 @@
 # README
 
+This is a Django version of "radar," a site and API that I am continually
+tinkering with to provide crime statistics for locations in Portland, Oregon.
+
+This version uses ElasticSearch, geohash grids and median averages to compare
+crime at the user's location to average crime across the city.
+
+The comparison is done by aggregating city crime data by geohash cell, summing
+by crime type for each cell (a bounding box), and then later finding the cell
+the user's location is in and comparing crime sums in that cell to the city
+averages.
+
 ## Installing
 
 First, set up the Vagrant instance:
