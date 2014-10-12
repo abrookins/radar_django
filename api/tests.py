@@ -5,7 +5,7 @@ from django.test import TestCase
 
 from rest_framework.authtoken.models import Token
 
-from crime_stats.tests.test_crimes import BaseCrimeTestCase
+from crime_stats.tests import BaseCrimeTestCase
 
 
 class TestCompareLocation(BaseCrimeTestCase):

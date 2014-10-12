@@ -1,37 +1,8 @@
-import os
-
 import haversine
 
-from django.conf import settings
-from django.test import TestCase
-from elasticsearch import Elasticsearch, NotFoundError
+from crime_stats import models
 
-from crime_stats import index, load_crimes, models
-
-
-TEST_INDEX = 'crimes_test'
-
-
-class BaseCrimeTestCase(TestCase):
-    """A base class for testing crimes that loads a test index with 2013 crime data"""
-    @classmethod
-    def setUpClass(cls):
-        cls.elasticsearch = Elasticsearch()
-        # Delete the index if a prior test run failed and didn't clean up.
-        try:
-            index.delete_index(cls.elasticsearch, TEST_INDEX)
-        except NotFoundError:
-            # That's ok
-            pass
-        cls.data_year = 2013
-        index.create_index(cls.elasticsearch, TEST_INDEX)
-        filename = os.path.join(settings.DATA_DIR, 'crimes_2013.json')
-        load_crimes.load_crimes(filename, es=cls.elasticsearch,
-                                index_name=TEST_INDEX)
-
-    @classmethod
-    def tearDownClass(cls):
-        index.delete_index(cls.elasticsearch, TEST_INDEX)
+from . import BaseCrimeTestCase, TEST_INDEX
 
 
 class TestCrimes(BaseCrimeTestCase):
@@ -101,17 +72,22 @@ class TestCrimes(BaseCrimeTestCase):
             expected = 1.2  # km
             self.assertLessEqual(distance, expected)
 
-    def test_get_cells_within_portland(self):
-        """The Crimes wrapper should return geohash cells found in the index"""
+    def test_cells_have_crimes(self):
+        """The Crimes wrapper should return mostly geohash cells in which crimes occurred"""
         cells = list(self.crimes.get_cells())
-        expected = 647
-        self.assertEqual(expected, len(cells))
+        num_cells_with_zero = 0
 
         for cell in cells:
-            self.assertLessEqual(cell['n'], models.PORTLAND['n'])
-            self.assertGreaterEqual(cell['s'], models.PORTLAND['s'])
-            self.assertLessEqual(cell['e'], models.PORTLAND['e'])
-            self.assertGreaterEqual(cell['w'], models.PORTLAND['w'])
+            crimes = self.crimes.get_crimes_within_cell(cell, self.data_year)
+            if len(list(crimes)) == 0:
+                num_cells_with_zero += 1
+
+        acceptable_threshold = 0.05
+        actual = num_cells_with_zero / len(cells)
+
+        self.assertLessEqual(actual, acceptable_threshold,
+                             "Number of geohash cells that lacked crimes was "
+                             "above acceptable threshold (0.05)")
 
     def test_get_cell_sums(self):
         """The Crimes wrapper should return a sum of crimes broken down by cell"""
