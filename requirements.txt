@@ -7,7 +7,7 @@ djangorestframework==2.4.2
 elasticsearch==1.2.0
 kombu==3.0.22
 pytz==2014.7
-urllib3==1.9
+urllib3==1.26.5
 python-geohash==0.8.5
 python-dateutil==2.2
 python-social-auth==0.2.1
